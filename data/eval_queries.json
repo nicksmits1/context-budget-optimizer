@@ -1,0 +1,114 @@
+[
+  {
+    "id": "q1",
+    "query": "What was our Q3 revenue and how did it compare to Q2?",
+    "expected_answer_keywords": ["47.2", "41.4", "revenue", "14%", "growth", "Q3", "Q2"],
+    "relevant_doc_ids": ["finance_q3_2025_report", "finance_q2_2025_report"],
+    "difficulty": "easy",
+    "requires_multi_doc": false
+  },
+  {
+    "id": "q2",
+    "query": "What is our parental leave policy?",
+    "expected_answer_keywords": ["16 weeks", "8 weeks", "primary", "secondary", "caregiver", "paid"],
+    "relevant_doc_ids": ["hr_parental_leave_policy"],
+    "difficulty": "easy",
+    "requires_multi_doc": false
+  },
+  {
+    "id": "q3",
+    "query": "How does our product roadmap align with the churn analysis findings?",
+    "expected_answer_keywords": ["permissions", "connector", "churn", "roadmap", "integration", "onboarding"],
+    "relevant_doc_ids": ["product_roadmap_h2_2025", "customer_success_churn_analysis"],
+    "difficulty": "hard",
+    "requires_multi_doc": true
+  },
+  {
+    "id": "q4",
+    "query": "What was the action item for the VP of Engineering from the March board meeting?",
+    "expected_answer_keywords": ["David", "Context Budget API", "architecture", "proposal", "April", "engineering all-hands"],
+    "relevant_doc_ids": ["board_meeting_notes_march_2025"],
+    "difficulty": "hard",
+    "requires_multi_doc": false
+  },
+  {
+    "id": "q5",
+    "query": "Summarize our company strategy for 2025.",
+    "expected_answer_keywords": ["enterprise", "context", "growth", "SOC 2", "API", "international"],
+    "relevant_doc_ids": ["board_meeting_notes_march_2025", "product_roadmap_h2_2025", "finance_budget_2025", "board_meeting_notes_june_2025"],
+    "difficulty": "hard",
+    "requires_multi_doc": true
+  },
+  {
+    "id": "q6",
+    "query": "What embedding model should we switch to and why?",
+    "expected_answer_keywords": ["bge-base-en-v1.5", "recall", "MiniLM", "768", "latency", "13%"],
+    "relevant_doc_ids": ["engineering_embedding_model_evaluation"],
+    "difficulty": "easy",
+    "requires_multi_doc": false
+  },
+  {
+    "id": "q7",
+    "query": "What are the biggest risks to our SOC 2 certification?",
+    "expected_answer_keywords": ["checksum", "processing integrity", "audit", "Deloitte", "remediation"],
+    "relevant_doc_ids": ["security_soc2_compliance"],
+    "difficulty": "medium",
+    "requires_multi_doc": false
+  },
+  {
+    "id": "q8",
+    "query": "How do we handle permissions for document access in the context engine?",
+    "expected_answer_keywords": ["Zanzibar", "ReBAC", "relation", "viewer", "tuple", "inheritance", "cache"],
+    "relevant_doc_ids": ["product_permissions_design"],
+    "difficulty": "medium",
+    "requires_multi_doc": false
+  },
+  {
+    "id": "q9",
+    "query": "What's the competitive situation with Glean and how are we responding?",
+    "expected_answer_keywords": ["Glean", "API-first", "developer", "win rate", "Series D", "mid-market"],
+    "relevant_doc_ids": ["product_competitive_analysis", "board_meeting_notes_march_2025", "sales_enterprise_playbook"],
+    "difficulty": "medium",
+    "requires_multi_doc": true
+  },
+  {
+    "id": "q10",
+    "query": "What is the salary range for a Senior Engineer?",
+    "expected_answer_keywords": ["175K", "220K", "E4", "equity", "140K", "240K"],
+    "relevant_doc_ids": ["hr_compensation_bands"],
+    "difficulty": "easy",
+    "requires_multi_doc": false
+  },
+  {
+    "id": "q11",
+    "query": "What caused the August production outage and what did we learn?",
+    "expected_answer_keywords": ["memory leak", "embedding", "batch", "OOM", "rollback", "v2.14.3"],
+    "relevant_doc_ids": ["engineering_incident_postmortem_aug2025"],
+    "difficulty": "medium",
+    "requires_multi_doc": false
+  },
+  {
+    "id": "q12",
+    "query": "What are the key metrics the board is tracking for the business?",
+    "expected_answer_keywords": ["revenue", "ARR", "customers", "burn", "EBITDA", "retention", "pipeline"],
+    "relevant_doc_ids": ["board_meeting_notes_march_2025", "board_meeting_notes_june_2025", "finance_q3_2025_report"],
+    "difficulty": "hard",
+    "requires_multi_doc": true
+  },
+  {
+    "id": "q13",
+    "query": "How should a new engineer set up their development environment?",
+    "expected_answer_keywords": ["dev-setup", "bootstrap", "minikube", "deploy-local", "buddy", "starter ticket"],
+    "relevant_doc_ids": ["onboarding_guide_engineering"],
+    "difficulty": "easy",
+    "requires_multi_doc": false
+  },
+  {
+    "id": "q14",
+    "query": "What is the Context Budget API and what strategies does it support?",
+    "expected_answer_keywords": ["budget", "token", "topk", "mmr", "importance", "summary", "strategy"],
+    "relevant_doc_ids": ["product_context_budget_api_spec", "product_roadmap_h2_2025"],
+    "difficulty": "medium",
+    "requires_multi_doc": true
+  }
+]
