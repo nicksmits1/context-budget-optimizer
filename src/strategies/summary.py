@@ -80,14 +80,16 @@ class SummaryStrategy(ContextStrategy):
 
     def _compress(self, query: str, text: str, target_tokens: int) -> str:
         """Compress text using LLM if available, else do extractive truncation."""
-        if self.llm_client:
+        if self.llm_client and getattr(self.llm_client, "available", False):
             try:
                 prompt = (
                     f"Summarize the following information as it relates to this query: '{query}'. "
                     f"Be concise. Keep the summary under {target_tokens} tokens.\n\n{text}"
                 )
-                result = self.llm_client.generate(prompt, max_tokens=target_tokens)
-                return result["answer"]
+                gen_limit = min(target_tokens, 512)
+                result = self.llm_client.generate(prompt, max_tokens=gen_limit)
+                if not result.get("mock", True):
+                    return result["answer"]
             except Exception:
                 pass
 

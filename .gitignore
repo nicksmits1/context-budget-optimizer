@@ -15,3 +15,8 @@ eval/results/*.json
 eval/results/*.md
 eval/results/*.png
 .pytest_cache/
+pacific_presentation.pptx
+presentation_prep.md
+.gitignore
+refactor_practice.ipynb
+~$Pacific_Presentation.pptx

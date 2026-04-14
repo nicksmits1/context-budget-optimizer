@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
-"""Run the full evaluation suite."""
+"""Run the full evaluation suite.
 
+Usage:
+    python eval/run_eval.py           # full eval (280 combos, needs generous API quota)
+    python eval/run_eval.py --quick   # quick eval (2 budgets, no judge calls — ~70 LLM calls)
+"""
+
+import argparse
 import os
 import sys
 
@@ -18,18 +24,45 @@ RESULTS_DIR = os.path.join(os.path.dirname(__file__), "results")
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--quick", action="store_true",
+                        help="Run a smaller eval (2 budgets, no judge) for free-tier API limits")
+    args = parser.parse_args()
+
     console.print("\n[bold]Context Budget Optimizer — Evaluation Suite[/bold]\n")
+
+    if args.quick:
+        console.print("[dim]Quick mode: 2 budgets, no LLM-as-judge[/dim]\n")
 
     console.print("Loading corpus and building index...")
     evaluator = Evaluator(CORPUS_DIR, QUERIES_PATH)
 
-    llm_status = "active (Qwen via HuggingFace)" if evaluator.llm.available else "mock mode (no HF_TOKEN)"
-    console.print(f"LLM status: {llm_status}")
-    console.print(f"Corpus: {len(evaluator.optimizer.chunks)} chunks from {len(set(c.doc_id for c in evaluator.optimizer.chunks))} documents")
+    # probe the LLM provider
+    if evaluator.llm.available:
+        console.print("Testing LLM connection...")
+        test = evaluator.llm.generate("Say OK", max_tokens=4)
+        if test["mock"]:
+            console.print("[yellow]LLM provider failed — falling back to mock mode[/yellow]")
+        else:
+            console.print(f"[green]LLM active[/green] — using {test['model']}")
+    else:
+        console.print("[yellow]LLM in mock mode[/yellow] — set HF_TOKEN in .env for real answers")
+
+    n_docs = len(set(c.doc_id for c in evaluator.optimizer.chunks))
+    console.print(f"Corpus: {len(evaluator.optimizer.chunks)} chunks from {n_docs} documents")
     console.print(f"Eval queries: {len(evaluator.queries)}\n")
 
-    console.print("Running evaluations (this may take a few minutes)...\n")
-    eval_data = evaluator.run_all(generate_answers=evaluator.llm.available)
+    budgets = [1024, 2048] if args.quick else None
+    use_judge = not args.quick
+
+    n_combos = len(budgets or [1024, 2048, 4096]) * 5 * len(evaluator.queries)
+    console.print(f"Running {n_combos} evaluations (this may take a few minutes)...\n")
+
+    eval_data = evaluator.run_all(
+        budgets=budgets,
+        generate_answers=evaluator.llm.available,
+        use_judge=use_judge,
+    )
 
     # print summary table
     table = Table(title="Strategy Comparison")

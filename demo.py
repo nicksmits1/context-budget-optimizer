@@ -91,7 +91,12 @@ def main():
     console.print(f"Loaded {len(optimizer.chunks)} chunks from {n_docs} documents.")
 
     if llm.available:
-        console.print("[green]LLM active[/green] — using Qwen via HuggingFace\n")
+        console.print("Testing LLM connection...")
+        test = llm.generate("Say OK", max_tokens=4)
+        if test["mock"]:
+            console.print("[yellow]LLM provider failed — running in mock mode[/yellow]\n")
+        else:
+            console.print(f"[green]LLM active[/green] — using {test['model']}\n")
     else:
         console.print("[yellow]LLM in mock mode[/yellow] — set HF_TOKEN in .env for real answers\n")
 
@@ -101,8 +106,8 @@ def main():
             break
 
         budget_size = IntPrompt.ask(
-            "Token budget", default=4096,
-            choices=["2048", "4096", "8192", "16384"],
+            "Token budget", default=2048,
+            choices=["1024", "2048", "4096"],
         )
 
         show_strategy_results(optimizer, query, budget_size)

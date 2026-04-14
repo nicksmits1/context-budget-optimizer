@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 
 
-BUDGET_LEVELS = [2048, 4096, 8192, 16384]
+BUDGET_LEVELS = [1024, 2048, 4096]
 
 
 def keyword_score(answer: str, keywords: list[str]) -> float:
@@ -33,7 +33,7 @@ class Evaluator:
         with open(queries_path) as f:
             self.queries = json.load(f)
 
-    def run_all(self, budgets=None, generate_answers: bool = True) -> dict:
+    def run_all(self, budgets=None, generate_answers: bool = True, use_judge: bool = True) -> dict:
         from src.strategies.base import ContextBudget
         from src.strategies import ALL_STRATEGIES
 
@@ -43,7 +43,6 @@ class Evaluator:
         results = []
         for q in self.queries:
             for strat in strategies:
-                # pass LLM client to summary strategy if available
                 if hasattr(strat, "llm_client") and strat.llm_client is None:
                     strat.llm_client = self.llm
 
@@ -60,13 +59,12 @@ class Evaluator:
                     judge_score = None
                     if run["answer"] and not run.get("llm_mock", True):
                         kw_score = keyword_score(run["answer"], q["expected_answer_keywords"])
-                        judge_result = self.llm.judge_answer(
-                            q["query"], run["answer"], q["expected_answer_keywords"]
-                        )
-                        if not judge_result["mock"]:
-                            judge_score = judge_result["score"]
-                    elif run["answer"]:
-                        kw_score = keyword_score(run["answer"], q["expected_answer_keywords"])
+                        if use_judge:
+                            judge_result = self.llm.judge_answer(
+                                q["query"], run["answer"], q["expected_answer_keywords"]
+                            )
+                            if not judge_result["mock"]:
+                                judge_score = judge_result["score"]
 
                     coverage = doc_coverage(run["chunk_ids"], q["relevant_doc_ids"])
 

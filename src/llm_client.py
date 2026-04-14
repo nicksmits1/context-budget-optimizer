@@ -1,73 +1,87 @@
 import os
 import time
+import torch
 from dotenv import load_dotenv
 
 load_dotenv()
 
-HF_TOKEN = os.getenv("HF_TOKEN")
-HF_MODEL = "Qwen/Qwen3.5-27B"
-HF_API_URL = f"https://router.huggingface.co/novita/v3/openai/chat/completions"
+MODEL_ID = "Qwen/Qwen2.5-1.5B-Instruct"
+
+_pipeline = None
+
+
+def _get_pipeline():
+    global _pipeline
+    if _pipeline is not None:
+        return _pipeline
+
+    from transformers import pipeline
+
+    device = "mps" if torch.backends.mps.is_available() else "cpu"
+    _pipeline = pipeline(
+        "text-generation",
+        model=MODEL_ID,
+        dtype=torch.float16 if device == "mps" else torch.float32,
+        device=device,
+    )
+    return _pipeline
 
 
 class LLMClient:
-    """Thin wrapper around HuggingFace Inference API using a Qwen model."""
+    """Runs a local Qwen model for inference — no API needed."""
 
-    def __init__(self, token=None, model=None):
-        self.token = token or HF_TOKEN
-        self.model = model or HF_MODEL
-        self._available = self.token is not None
+    def __init__(self):
+        self._available = True
+        self._pipe = None
 
     @property
     def available(self) -> bool:
         return self._available
 
-    def generate(
-        self, prompt: str, system: str = "", max_tokens: int = 1024
-    ) -> dict:
-        """Call the HuggingFace Inference API. Returns dict with 'answer' and 'timing' keys."""
-        if not self._available:
-            return self._mock_response(prompt)
+    def _pipe_ready(self):
+        if self._pipe is None:
+            try:
+                self._pipe = _get_pipeline()
+            except Exception:
+                self._available = False
+                return False
+        return True
+
+    def generate(self, prompt: str, system: str = "", max_tokens: int = 512) -> dict:
+        if not self._pipe_ready():
+            return self._mock_response()
+
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
 
         try:
-            from huggingface_hub import InferenceClient
-
-            client = InferenceClient(
-                provider="novita",
-                api_key=self.token,
-            )
-
-            messages = []
-            if system:
-                messages.append({"role": "system", "content": system})
-            messages.append({"role": "user", "content": prompt})
-
             start = time.time()
-            response = client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                max_tokens=max_tokens,
+            out = self._pipe(
+                messages,
+                max_new_tokens=max_tokens,
+                do_sample=True,
+                temperature=0.3,
+                top_p=0.9,
             )
             wall_time = time.time() - start
-
-            answer = response.choices[0].message.content
-
+            answer = out[0]["generated_text"][-1]["content"]
             return {
                 "answer": answer,
-                "model": self.model,
+                "model": MODEL_ID,
                 "wall_time_ms": round(wall_time * 1000, 1),
                 "mock": False,
             }
         except Exception as e:
             return {
-                "answer": f"[LLM call failed: {e}]",
-                "model": self.model,
+                "answer": f"[LLM error: {e}]",
+                "model": MODEL_ID,
                 "wall_time_ms": 0,
                 "mock": True,
             }
 
-    def generate_with_context(
-        self, query: str, context: str, max_tokens: int = 1024
-    ) -> dict:
+    def generate_with_context(self, query: str, context: str, max_tokens: int = 256) -> dict:
         system = (
             "You are a helpful assistant. Answer the user's question using only "
             "the provided context. If the context doesn't contain enough information, "
@@ -76,10 +90,7 @@ class LLMClient:
         prompt = f"Context:\n{context}\n\nQuestion: {query}"
         return self.generate(prompt, system=system, max_tokens=max_tokens)
 
-    def judge_answer(
-        self, query: str, answer: str, expected_keywords: list[str]
-    ) -> dict:
-        """LLM-as-judge: score answer relevance on 1-5 scale."""
+    def judge_answer(self, query: str, answer: str, expected_keywords: list[str]) -> dict:
         prompt = (
             f"Rate the following answer to the question on a scale of 1-5 "
             f"(1=irrelevant, 5=excellent). Consider whether it addresses the question "
@@ -95,12 +106,9 @@ class LLMClient:
             return {"score": 3, "mock": True}
 
     @staticmethod
-    def _mock_response(prompt: str) -> dict:
+    def _mock_response() -> dict:
         return {
-            "answer": (
-                "[Mock response — no HF_TOKEN set. "
-                "Set HF_TOKEN in .env to get real LLM answers.]"
-            ),
+            "answer": "[Mock — failed to load local model]",
             "model": "mock",
             "wall_time_ms": 50.0,
             "mock": True,
